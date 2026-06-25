@@ -15,7 +15,7 @@ SoulGuard makes agent memory and identity **first-class, verifiable, owned primi
 | Module | What it does |
 |---|---|
 | `memory` | **Hash-chained, tamper-evident memory** — any later edit breaks the chain and is *detected*, not silent. |
-| `identity` | **Per-agent cryptographic identity (SoulKeys, Ed25519)** — sign memories/messages; catch impersonation & persona drift. |
+| `identity` | **Per-agent cryptographic identity (SoulKeys, Ed25519 — or quantum-ready hybrid Ed25519 + ML-DSA-44)** — sign memories/messages; catch impersonation & persona drift. |
 | `governance` | **Capability-scoped, JIT, least-privilege tokens** — even a partially-compromised agent can't exceed its authority. |
 | `detection` | **ASI06 scan** — turns silent poisoning into a classified alarm (content-tampered / injection / forged-signature). |
 
@@ -29,6 +29,8 @@ python benchmark/asi06_harness.py    # ASI06 detection benchmark v0
 
 # identity (SoulKeys) needs cryptography:
 pip install cryptography
+# quantum-ready hybrid SoulKeys (Ed25519 + ML-DSA-44) also need quantcrypt:
+pip install 'soulguard[pqc]'
 ```
 
 ## 30-second example
@@ -54,6 +56,16 @@ key = SoulKey()
 mem = TamperEvidentMemory(agent_id=key.agent_id)
 mem.append("signed memory", signer=key)
 scan(mem, verifier=key.public()).intact   # True; a forged sig would flag bad_signature
+```
+
+Quantum-ready: same API, hybrid keys (a break of Ed25519 *or* ML-DSA-44 alone can't forge):
+
+```python
+from soulguard import HybridSoulKey, TamperEvidentMemory, scan
+key = HybridSoulKey()                       # Ed25519 + ML-DSA-44, both-or-reject
+mem = TamperEvidentMemory(agent_id=key.agent_id)
+mem.append("post-quantum signed memory", signer=key)
+scan(mem, verifier=key.public()).intact     # True
 ```
 
 ## Status

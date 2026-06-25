@@ -9,7 +9,7 @@ description = "An open trust layer for AI-agent memory and identity: tamper-evid
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "Apache-2.0" }
-authors = [{ name = "Saluca LLC", email = "cristian@saluca.com" }]
+authors = [{ name = "Saluca Labs", email = "info@saluca.com" }]
 keywords = ["ai-security", "agentic-ai", "memory-poisoning", "asi06", "agent-identity", "sovereign-ai", "trustworthy-ai"]
 classifiers = [
     "License :: OSI Approved :: Apache Software License",
@@ -21,7 +21,8 @@ dependencies = []  # core is standard-library only
 
 [project.optional-dependencies]
 identity = ["cryptography>=42.0"]   # SoulKey Ed25519 signatures
-dev = ["pytest>=7.0", "cryptography>=42.0"]
+pqc = ["cryptography>=42.0", "quantcrypt>=1.0.0"]   # Hybrid Ed25519 + ML-DSA-44 SoulKeys (FIPS 204)
+dev = ["pytest>=7.0", "cryptography>=42.0", "quantcrypt>=1.0.0"]
 
 [project.urls]
 Homepage = "https://saluca.com"

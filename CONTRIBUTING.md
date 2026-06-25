@@ -25,4 +25,4 @@ python benchmark/asi06_harness.py
 By contributing you agree your contributions are licensed under **Apache-2.0** (see `LICENSE`). Please don't submit code encumbered by patents you can't license under Apache-2.0's grant.
 
 ## Security
-Found a vulnerability? Email **cristian@saluca.com** rather than opening a public issue.
+Found a vulnerability? Email **info@saluca.com** rather than opening a public issue.

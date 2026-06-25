@@ -19,3 +19,11 @@ try:
     __all__ += ["SoulKey", "SoulKeyVerifier"]
 except Exception:
     pass
+
+# Hybrid post-quantum SoulKeys are lazier still — they also need `quantcrypt`
+# (pip install 'soulguard[pqc]'). Absent it, the classical SoulKey above still works.
+try:
+    from .identity import HybridSoulKey, HybridSoulKeyVerifier  # noqa: F401
+    __all__ += ["HybridSoulKey", "HybridSoulKeyVerifier"]
+except Exception:
+    pass
