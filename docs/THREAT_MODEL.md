@@ -16,11 +16,12 @@ A party who can write to, or tamper with, an agent's memory store or message str
 | A1 | **Content tampering** | Edit a stored memory after the fact ("no IOC was seen") | Hash-chained entries; stored content must match its hash | `content_tampered` |
 | A2 | **Injection / reorder** | Splice a forged memory into history, or reorder entries | Each entry's `prev_hash` must reference the true prior entry | `broken_link` |
 | A3 | **Impersonation / persona hijack** | Attribute a memory/action to another agent | Per-agent Ed25519 SoulKey signatures over entry hashes | `bad_signature` |
+| A3b | **Signature stripping** | Rebuild the hash chain, then *delete* the signatures rather than forge them | Absence is treated exactly like forgery: on a verified chain, an entry carrying no signature is a finding, not a skipped check | `missing_signature` |
 | A4 | **Authority over-reach** | A poisoned agent invokes tools beyond its role | Capability-scoped, short-TTL, signed tokens (least privilege) | token verification fails |
 | A5 | **Stale / replayed authority** | Reuse an old capability token | TTL expiry on tokens | token verification fails |
 
 ## What SoulGuard does and does not do
-**Does:** make A1–A3 *detectable* (silent corruption → raised alarm) and A4–A5 *preventable* (least-privilege, expiring authority); keep the substrate local-first and owned; provide a reproducible ASI06 detection benchmark.
+**Does:** make A1–A3b *detectable* (silent corruption → raised alarm) and A4–A5 *preventable* (least-privilege, expiring authority); keep the substrate local-first and owned; provide a reproducible ASI06 detection benchmark. Note that A3b is why signature *absence* is a failure rather than a skipped check: an adversary able to rebuild the chain is also able to delete the signatures that would expose the rebuild, so a verifier that only checks signatures it happens to find defends against forgery alone, which is the attack such an adversary has no reason to attempt. Chains predating signing are handled by an explicit, caller-supplied boundary, never by inferring intent from a missing field.
 **Does not (v0, residual risk):** prevent the *initial* injection at the input boundary (that's the prompt-firewall layer's job — SoulGuard is the integrity layer beneath it); distinguish *malicious* edits from *authorized* memory evolution at the semantic level (v0 treats the chain as append-only; authorized mutation = a new, signed entry, not an in-place edit); defend a fully-compromised host that holds the signing keys (key custody/HSM is out of scope for v0).
 
 ## Trust & key custody assumptions
