@@ -2,7 +2,7 @@
 
 **An open trust layer for AI-agent memory and identity.** Tamper-evident memory, per-agent cryptographic identity, capability-scoped governance, and OWASP-**ASI06** memory-poisoning detection — so stateful agents can't be silently corrupted into acting on a falsified history.
 
-Apache-2.0 · by [Saluca LLC](https://saluca.com) · extracted from the production stack that runs **Alfred**, a sovereign agentic operating partner.
+FSL-1.1-Apache (converts to Apache-2.0 after two years) · by [Saluca LLC](https://saluca.com) · extracted from the production stack that runs **Alfred**, a sovereign agentic operating partner.
 
 ---
 
@@ -80,7 +80,17 @@ v0.1 — a working core + a reproducible ASI06 benchmark protocol. Hardening, a 
 
 ## License
 
-Apache-2.0. The patent grant covers the released SoulGuard code; Saluca's broader patent portfolio is separate.
+**FSL-1.1-Apache** (Functional Source License 1.1, Apache 2.0 Future License). Read it, modify it, self-host
+it, run it internally. The one thing you may not do is offer it as a product that competes with ours. Each
+released version converts automatically to **Apache-2.0 two years after its release**, so the restriction is
+time-limited by construction rather than by promise.
+
+Versions released **before 2026-08-14 were Apache-2.0 and remain so** for anyone who obtained them.
+Relicensing is not retroactive and this repository's history is unchanged. See `NOTICE` for the full licence
+history and patent scope.
+
+Saluca's broader patent portfolio (filed provisional applications) is separate and is not licensed by this
+repository under either licence.
 
 ---
 *SoulGuard is part of Saluca's thesis: an AI partner for everyone — **and you own it**.*
