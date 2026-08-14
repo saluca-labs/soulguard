@@ -22,7 +22,7 @@ python benchmark/asi06_harness.py
 - Independent review of the crypto and the threat model (`docs/THREAT_MODEL.md`).
 
 ## License
-By contributing you agree your contributions are licensed under **Apache-2.0** (see `LICENSE`). Please don't submit code encumbered by patents you can't license under Apache-2.0's grant.
+By contributing you agree your contributions are licensed under **FSL-1.1-Apache** (see `LICENSE`), which converts each released version to Apache-2.0 two years after its release. Please don't submit code encumbered by patents you can't license under Apache-2.0's grant.
 
 ## Security
 Found a vulnerability? Email **info@saluca.com** rather than opening a public issue.
