@@ -88,7 +88,7 @@ IETF, and a proposed standard needs an implementation that implementers and revi
 reading a licence first.
 
 Versions released between **2026-08-14 and 2026-09-04** were offered under FSL-1.1-Apache and keep those
-terms for anyone who obtained them. Everything before and after is Apache-2.0. See `NOTICE` for the full
+terms for anyone who obtained them. Everything before and since is Apache-2.0. See `NOTICE` for the full
 history.
 Relicensing is not retroactive and this repository's history is unchanged. See `NOTICE` for the full licence
 history and patent scope.

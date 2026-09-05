@@ -13,10 +13,10 @@ here rather than quietly rewritten.
 
   Versions released before 2026-08-14        Apache License, Version 2.0
   Versions released 2026-08-14 to 2026-09-04 FSL-1.1-Apache
-  Versions released from 2026-09-05 onward   Apache License, Version 2.0
+  Versions released from this commit onward  Apache License, Version 2.0
 
 The move to the Functional Source License in August 2026 was reversed on
-2026-09-05. SoulGuard implements the mechanisms described in Saluca LLC's
+2026-09-04. SoulGuard implements the mechanisms described in Saluca LLC's
 Internet-Drafts before the IETF, and a source-available licence with a
 field-of-use restriction is the wrong vehicle for a reference implementation of
 a proposed standard. Apache-2.0 is what an implementer, a reviewer or a
