@@ -4,28 +4,37 @@ Copyright 2026 Saluca LLC
 This product includes software developed at Saluca LLC (https://saluca.com),
 extracted from the production agent stack that operates "Alfred."
 
-Licensed under the Functional Source License, Version 1.1, Apache 2.0 Future
-License (FSL-1.1-Apache). See LICENSE. Each version converts to Apache-2.0 two
-years after its release date, so this remains a time-limited restriction rather
-than a permanent one.
+Licensed under the Apache License, Version 2.0. See LICENSE.
 
 LICENCE HISTORY, STATED PLAINLY
 -------------------------------
-Versions of SoulGuard released before 2026-08-14 were published under the Apache
-License, Version 2.0. Relicensing is not retroactive: anyone who obtained those
-versions under Apache-2.0 keeps Apache-2.0 rights in them permanently, including
-the express patent grant in Apache-2.0 section 3 as scoped below. Those commits
-remain in this repository's git history under their original terms. Only versions
-released from 2026-08-14 onward are offered under FSL-1.1-Apache.
+This project has been offered under two licences, and the history is recorded
+here rather than quietly rewritten.
+
+  Versions released before 2026-08-14        Apache License, Version 2.0
+  Versions released 2026-08-14 to 2026-09-04 FSL-1.1-Apache
+  Versions released from this commit onward  Apache License, Version 2.0
+
+The move to the Functional Source License in August 2026 was reversed on
+2026-09-04. SoulGuard implements the mechanisms described in Saluca LLC's
+Internet-Drafts before the IETF, and a source-available licence with a
+field-of-use restriction is the wrong vehicle for a reference implementation of
+a proposed standard. Apache-2.0 is what an implementer, a reviewer or a
+standards body can actually rely on.
+
+Relicensing is not retroactive in either direction. Anyone who obtained a
+version under Apache-2.0 keeps Apache-2.0 rights in it permanently, and anyone
+who obtained a version under FSL-1.1-Apache keeps those terms in that version.
+All commits remain in this repository's git history under the terms that applied
+when they were released.
 
 PATENT SCOPE
 ------------
-The Apache-2.0 patent grant that applied to versions released before 2026-08-14
-covers the released SoulGuard source code only. Saluca LLC's broader patent
-portfolio (filed provisional applications) is separate and was not licensed by
-that grant.
+The Apache-2.0 patent grant in section 3 covers the released SoulGuard source
+code only. Saluca LLC's broader patent portfolio, which consists of filed
+provisional applications, is separate and is not licensed by that grant.
 
-FSL-1.1-Apache does not include an express patent grant while the FSL terms
-apply. When a given version reaches its Change Date and converts to Apache-2.0,
-the Apache-2.0 patent grant attaches to that version at that point, on the same
-scope: the released source code only, not the broader portfolio.
+Separately, and not by this licence: Saluca LLC has filed IPR disclosures under
+BCP 79 against its Internet-Drafts at the IETF. Those disclosures state the
+licensing terms that apply to implementers of those drafts, and they stand on
+their own record at the IETF datatracker.

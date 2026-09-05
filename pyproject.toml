@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "An open trust layer for AI-agent memory and identity: tamper-evident memory, cryptographic agent identity, capability-scoped governance, and OWASP-ASI06 memory-poisoning detection."
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "FSL-1.1-Apache" }
+license = { text = "Apache-2.0" }
 authors = [{ name = "Saluca Labs", email = "info@saluca.com" }]
 keywords = ["ai-security", "agentic-ai", "memory-poisoning", "asi06", "agent-identity", "sovereign-ai", "trustworthy-ai"]
 classifiers = [
