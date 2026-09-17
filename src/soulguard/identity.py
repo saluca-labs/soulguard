@@ -9,7 +9,7 @@ For a quantum-ready identity, `HybridSoulKey` / `HybridSoulKeyVerifier` sign wit
 Ed25519 AND ML-DSA-44 (FIPS 204) in parallel and verify both-or-reject — a break of
 either algorithm alone cannot forge a signature. They share the classical SoulKey's
 `.sign(msg)->bytes` / `.verify(msg,sig)->bool` interface, so they drop straight into the
-tamper-evident memory chain. Needs `quantcrypt` (pip install 'soulguard[pqc]').
+tamper-evident memory chain. Needs `quantcrypt` (the `pqc` extra; install from git, see README).
 """
 from __future__ import annotations
 
@@ -89,8 +89,8 @@ class SoulKeyVerifier:
 # Ed25519, an agent's signed history stays attributable. Drop-in: HybridSoulKey /
 # HybridSoulKeyVerifier expose the same .sign(msg)->bytes / .verify(msg,sig)->bool
 # duck-type the memory chain already uses, so `append(signer=...)` and
-# `verify(verifier=...)` work unchanged. Needs `quantcrypt` (pip install
-# 'soulguard[pqc]'); import fails cleanly otherwise, leaving the classical path intact.
+# `verify(verifier=...)` work unchanged. Needs `quantcrypt` (the `pqc`
+# extra, or `pip install quantcrypt`); import fails cleanly otherwise, leaving the classical path intact.
 import struct as _struct
 
 try:
@@ -106,7 +106,7 @@ def _require_pq():
     _require()
     if not _HAVE_PQ:
         raise ImportError(
-            "Hybrid (post-quantum) SoulKeys need `quantcrypt` — `pip install 'soulguard[pqc]'`."
+            "Hybrid (post-quantum) SoulKeys need `quantcrypt`: `pip install quantcrypt`, or install the soulguard `pqc` extra from git (see README)."
         )
 
 

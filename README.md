@@ -29,9 +29,15 @@ python benchmark/asi06_harness.py    # ASI06 detection benchmark v0
 
 # identity (SoulKeys) needs cryptography:
 pip install cryptography
-# quantum-ready hybrid SoulKeys (Ed25519 + ML-DSA-44) also need quantcrypt:
-pip install 'soulguard[pqc]'
+# quantum-ready hybrid SoulKeys (Ed25519 + ML-DSA-44) also need quantcrypt.
+# Install SoulGuard itself from this repository, pinned to a commit or tag:
+pip install "soulguard[pqc] @ git+https://github.com/saluca-labs/soulguard@42a4233438a51e7d783eef2942fc4734bba8bda4"
 ```
+
+SoulGuard is distributed as source from this GitHub repository only. It is not
+published on PyPI, and a PyPI package named `soulguard` is not ours: never
+install it from PyPI. Pin the git install to a tag or commit you
+have reviewed (the commit above is an example; replace it with the ref you want).
 
 ## 30-second example
 

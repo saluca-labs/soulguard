@@ -17,13 +17,13 @@ __version__ = "0.1.0"
 try:
     from .identity import SoulKey, SoulKeyVerifier  # noqa: F401
     __all__ += ["SoulKey", "SoulKeyVerifier"]
-except Exception:
+except ImportError:
     pass
 
 # Hybrid post-quantum SoulKeys are lazier still — they also need `quantcrypt`
-# (pip install 'soulguard[pqc]'). Absent it, the classical SoulKey above still works.
+# (the `pqc` extra; install from git, see README). Absent it, the classical SoulKey above still works.
 try:
     from .identity import HybridSoulKey, HybridSoulKeyVerifier  # noqa: F401
     __all__ += ["HybridSoulKey", "HybridSoulKeyVerifier"]
-except Exception:
+except ImportError:
     pass
