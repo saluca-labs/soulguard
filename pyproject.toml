@@ -19,9 +19,9 @@ classifiers = [
 dependencies = []  # core is standard-library only
 
 [project.optional-dependencies]
-identity = ["cryptography>=42.0"]   # SoulKey Ed25519 signatures
-pqc = ["cryptography>=42.0", "quantcrypt>=1.0.0"]   # Hybrid Ed25519 + ML-DSA-44 SoulKeys (FIPS 204)
-dev = ["pytest>=7.0", "cryptography>=42.0", "quantcrypt>=1.0.0"]
+identity = ["cryptography>=49.0.0"]   # SoulKey Ed25519 signatures
+pqc = ["cryptography>=49.0.0", "quantcrypt>=1.0.0"]   # Hybrid Ed25519 + ML-DSA-44 SoulKeys (FIPS 204)
+dev = ["pytest>=7.0", "cryptography>=49.0.0", "quantcrypt>=1.0.0"]
 
 [project.urls]
 Homepage = "https://saluca.com"
