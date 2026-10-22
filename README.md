@@ -23,6 +23,38 @@ Apache-2.0 · by [Saluca LLC](https://saluca.com) · extracted from the producti
 
 ---
 
+## How it works
+
+Two paths, both in `src/soulguard/memory.py`: `append()` writes an entry, and `verify()` (called by `detection.scan()`) re-derives every hash and link from the first entry on.
+
+```mermaid
+flowchart TD
+  subgraph write["Write path"]
+    w1["TamperEvidentMemory.append(content, ts, signer)<br/>idx = last entry's idx + 1, or 0<br/>prev_hash = head, GENESIS = 64 zeros for the first"] --> w2["entry_hash(): SHA-256 of canonical JSON<br/>{idx, ts, agent_id, content, prev_hash}"]
+    w2 --> w3{"signer given?"}
+    w3 -- "yes" --> w4["sig = signer.sign(hash).hex()<br/>SoulKey or HybridSoulKey"]
+    w3 -- "no" --> w5["sig = None"]
+    w4 --> w6["entries.append(MemoryEntry)"]
+    w5 --> w6
+  end
+  subgraph check["Check path"]
+    c1["detection.scan(memory, verifier, signed_from_idx)<br/>calls memory.verify(): for each entry,<br/>prev starts at GENESIS"] --> c2["recompute() != hash<br/>finding content_tampered"]
+    c1 --> c3["prev_hash != previous hash<br/>finding broken_link"]
+    c1 --> c4{"verifier given?"}
+    c4 -- "yes, sig is None and idx >= signed_from_idx" --> c5["finding missing_signature"]
+    c4 -- "yes, verifier.verify() false or raises" --> c6["finding bad_signature"]
+    c4 -- "no" --> c7["signatures not checked"]
+    c2 --> r["ScanResult: intact, findings, checked,<br/>signatures_verified, unsigned_prefix"]
+    c3 --> r
+    c5 --> r
+    c6 --> r
+    c7 --> r
+  end
+  w6 -. "mem.entries" .-> c1
+```
+
+Nothing on either path records how many entries a chain should have, which is why tail deletion passes (correction 1 above). Governance tokens are a separate path, not shown: `issue_token()` and `verify_token()` in `governance.py` share no state with memory.
+
 ## Why
 
 AI agents became *stateful*: they carry persistent **memory**, a durable **identity**, and tool access. That state is also the new attack surface. In 2026 OWASP named **Memory Poisoning (ASI06)** a top-10 agentic risk: once memory is the substrate, an injected lie persists across sessions and the agent later acts on it with full authority, the machine equivalent of confabulation. Input-only guardrails don't see the corrupted state that already lives inside the agent.
@@ -46,7 +78,9 @@ Experimental, v0.1.0. What works today, all of it covered by the 25 tests in `te
 - `scan()`, which reports whether signatures were actually checked (`signatures_verified`);
 - a v0 ASI06 benchmark harness with a fixed seed.
 
-What it does not do: detect a false memory written through the normal `append()` path (SoulGuard is the integrity layer, not a content filter), detect deletion of entries from the end of a chain, or enforce tokens on your behalf. The ASI06 harness injects only two attack types (an in-place content edit and an out-of-band entry), both of which the hash chain catches by construction, so its 1.000 detection rate is a regression check, not evidence against an adaptive adversary.
+What it does not do: detect a false memory written through the normal `append()` path (SoulGuard is the integrity layer, not a content filter), detect deletion of entries from the end of a chain, or enforce tokens on your behalf. The ASI06 harness injects only two attack types (an in-place content edit and an out-of-band entry), both of which the hash chain catches by construction, so its 1.000 detection rate is a regression check, not evidence against an adaptive adversary. To re-derive it: `python benchmark/asi06_harness.py` (500 trials of length 20, `SEED = 1337` in the
+script); the output from 2026-10-22 is in [`docs/img/asi06-benchmark-2026-10-22.txt`](docs/img/asi06-benchmark-2026-10-22.txt).
+There is no archived record or DOI for it.
 
 Planned and not yet built: hardening, a formal third-party security audit, expanded reference implementations, MCP adapters, and a published adversarial benchmark (see [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md)).
 
@@ -162,15 +196,28 @@ Supply `N` from your own configuration, never from a field stored in the chain.
 
 ```mermaid
 flowchart LR
-  A[agent] -->|append content, signer| M[memory.TamperEvidentMemory]
-  M -->|entries| D[detection.scan]
-  K[identity.SoulKey / HybridSoulKey] -->|sign entry hash| M
-  K -->|public key, pinned| D
-  D --> R[ScanResult: intact, findings, signatures_verified]
-  G[governance.issue_token] --> T[capability token]
-  T --> V[governance.verify_token, called by your code before each action]
+  init["import soulguard<br/>package init re-exports the core;<br/>identity only if its dependencies import"]
+  subgraph stdlib["Standard library only"]
+    memory["memory.py<br/>TamperEvidentMemory, MemoryEntry, Finding"]
+    detection["detection.py<br/>scan, ScanResult"]
+    governance["governance.py<br/>issue_token, verify_token"]
+  end
+  subgraph crypto["Needs cryptography"]
+    soulkey["identity.py<br/>SoulKey, SoulKeyVerifier (Ed25519)"]
+  end
+  subgraph pqc["Needs quantcrypt too"]
+    hybrid["identity.py<br/>HybridSoulKey, HybridSoulKeyVerifier<br/>Ed25519 + ML-DSA-44, pqc extra"]
+  end
+  init --> memory
+  init --> detection
+  init --> governance
+  init -. "try, except ImportError" .-> soulkey
+  init -. "try, except ImportError" .-> hybrid
+  detection -- "imports" --> memory
+  soulkey -. "passed in as signer or verifier,<br/>never imported by memory.py" .-> memory
+  hybrid -. "same sign/verify interface" .-> memory
+  yourcode["your code"] -- "verify_token() before each action" --> governance
 ```
-
 | File | What it holds |
 |---|---|
 | `src/soulguard/memory.py` | `TamperEvidentMemory`, `MemoryEntry`, `Finding`; SHA-256 over canonical JSON, each entry linked to the previous hash |
@@ -181,7 +228,19 @@ flowchart LR
 | `docs/THREAT_MODEL.md` | assets, adversary, attack classes, residual risk |
 
 The core imports only the standard library; `identity` is imported only if `cryptography` (and, for
-the hybrid keys, `quantcrypt`) is installed.
+the hybrid keys, `quantcrypt`) is installed. `memory.py` never imports `identity.py`: any object with
+`sign(bytes) -> bytes` or `verify(bytes, bytes) -> bool` works as a signer or verifier.
+
+### In this repo and not in this repo
+
+| Layer | In this repo | Licence | Where it lives |
+|---|---|---|---|
+| Hash-chained memory, SoulKeys, capability tokens, ASI06 scan | yes | Apache-2.0 | `src/soulguard/` |
+| ASI06 benchmark v0 | yes | Apache-2.0 | `benchmark/asi06_harness.py` |
+| Persistence: saving a chain to a database or file | no; `to_json()` and `from_json()` only | - | your code |
+| An independent verifier for Saluca's other chain format (SHA-512, signed blocks) | no | Apache-2.0 | [saluca-labs/chain-verify](https://github.com/saluca-labs/chain-verify) |
+| The production stack SoulGuard was extracted from | no | not open source | not public |
+| The specifications | no | IETF Internet-Drafts | [draft-ruvalcaba series](https://datatracker.ietf.org/doc/search?name=draft-ruvalcaba&rfcs=on&activedrafts=on) |
 
 ## Design principles
 

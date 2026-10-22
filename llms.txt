@@ -2,25 +2,41 @@
 
 > A Python library for tamper-evident agent memory (a SHA-256 hash chain), per-agent Ed25519 and hybrid Ed25519 + ML-DSA-44 signing keys ("SoulKeys"), HMAC capability tokens, and an OWASP ASI06 tamper scan. Apache-2.0, by Saluca LLC.
 
-Facts agents most often get wrong: the core (memory, governance, detection) is standard library only, Python 3.9+; identity needs `cryptography`, hybrid keys also need `quantcrypt`. It is installed from this GitHub repository only, never from PyPI (a PyPI project with the same name is not this one). It detects edits to stored entries, splices, reorders and stripped or forged signatures; it does not detect deletion of entries from the end of a chain, false content written through `append()`, or tool calls that skip `verify_token()`.
+Facts agents most often get wrong: the core (memory, governance, detection) is standard library only, Python 3.9+; identity needs `cryptography`, hybrid keys also need `quantcrypt`. It is installed from this GitHub repository only, never from PyPI (a PyPI project with the same name is not this one). It detects edits to stored entries, splices, reorders and stripped or forged signatures; it does not detect deletion of entries from the end of a chain, false content written through `append()`, or tool calls that skip `verify_token()`. There is no storage layer, no CLI and no server.
 
-## Docs
+## Complete public surface
 
-- [README](https://github.com/saluca-labs/soulguard/blob/main/README.md): install, quickstart, usage, architecture, the 2026-10-22 correction note
+If a name is not listed here, it is not part of the public API. Exported from `soulguard` (`__all__` in src/soulguard/__init__.py):
+
+- Memory: `TamperEvidentMemory(agent_id)` with `.append(content, ts=None, signer=None)`, `.verify(verifier=None, signed_from_idx=0)`, `.is_intact(...)`, `.head`, `.entries`, `.to_json()`, `TamperEvidentMemory.from_json(s)`; `MemoryEntry`; `Finding(idx, kind, detail)`
+- Detection: `scan(memory, verifier=None, signed_from_idx=0)` returning `ScanResult(intact, findings, checked, signatures_verified, unsigned_prefix)` with `.first_compromised_index` and `.summary()`. Finding kinds: `content_tampered`, `broken_link`, `bad_signature`, `missing_signature`
+- Governance: `issue_token(secret, agent_id, scopes, ttl_seconds=300, now=None)`, `verify_token(secret, token, required_scope, now=None)`
+- Identity, only when `cryptography` imports: `SoulKey`, `SoulKeyVerifier`; only when `quantcrypt` also imports: `HybridSoulKey`, `HybridSoulKeyVerifier`. Keys have `.sign(bytes)`, `.public()`, `.agent_id`, `.public_bytes()`, `.export_private()`, `.from_private(raw)`; verifiers have `.verify(message, signature) -> bool`
+- Scripts: `python examples/quickstart.py`, `python benchmark/asi06_harness.py`
+- Install: `pip install "soulguard @ git+https://github.com/saluca-labs/soulguard@<commit>"` (extras: `identity`, `pqc`, `dev`)
+
+## Start here
+
+- [README](https://github.com/saluca-labs/soulguard/blob/main/README.md): how it works (diagrams), install, quickstart, usage, the 2026-10-22 correction note
+- [AGENTS.md](https://github.com/saluca-labs/soulguard/blob/main/AGENTS.md): orientation, the numbers to trust with their sources, test commands
+
+## In depth
+
 - [Threat model](https://github.com/saluca-labs/soulguard/blob/main/docs/THREAT_MODEL.md): assets, adversary, attack classes A1 to A5, residual risk
-- [Contributing](https://github.com/saluca-labs/soulguard/blob/main/CONTRIBUTING.md): dev setup, scope, vulnerability reporting
-
-## Code
-
 - [src/soulguard/memory.py](https://github.com/saluca-labs/soulguard/blob/main/src/soulguard/memory.py): TamperEvidentMemory, the hash chain and verify()
+- [src/soulguard/detection.py](https://github.com/saluca-labs/soulguard/blob/main/src/soulguard/detection.py): scan() and ScanResult
 - [src/soulguard/identity.py](https://github.com/saluca-labs/soulguard/blob/main/src/soulguard/identity.py): SoulKey, HybridSoulKey and their verifiers
 - [src/soulguard/governance.py](https://github.com/saluca-labs/soulguard/blob/main/src/soulguard/governance.py): issue_token, verify_token
-- [src/soulguard/detection.py](https://github.com/saluca-labs/soulguard/blob/main/src/soulguard/detection.py): scan() and ScanResult
+
+## Build on it or verify it
+
 - [examples/quickstart.py](https://github.com/saluca-labs/soulguard/blob/main/examples/quickstart.py): the shortest end-to-end demo
 - [tests/](https://github.com/saluca-labs/soulguard/blob/main/tests): the pytest suite (25 tests on 2026-10-22)
+- [benchmark/asi06_harness.py](https://github.com/saluca-labs/soulguard/blob/main/benchmark/asi06_harness.py): ASI06 benchmark v0, seed 1337; its 2026-10-22 output is [docs/img/asi06-benchmark-2026-10-22.txt](https://github.com/saluca-labs/soulguard/blob/main/docs/img/asi06-benchmark-2026-10-22.txt)
+- [Contributing](https://github.com/saluca-labs/soulguard/blob/main/CONTRIBUTING.md): dev setup, scope, vulnerability reporting
 
 ## Optional
 
-- [benchmark/asi06_harness.py](https://github.com/saluca-labs/soulguard/blob/main/benchmark/asi06_harness.py): ASI06 benchmark v0, fixed seed
 - [NOTICE](https://github.com/saluca-labs/soulguard/blob/main/NOTICE): licence history and patent scope
-- [llms-full.txt](https://github.com/saluca-labs/soulguard/blob/main/llms-full.txt): README and docs concatenated
+- [saluca-labs/chain-verify](https://github.com/saluca-labs/chain-verify): an independent verifier for Saluca's separate SHA-512 chain format
+- [llms-full.txt](https://github.com/saluca-labs/soulguard/blob/main/llms-full.txt): README, AGENTS.md and docs concatenated

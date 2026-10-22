@@ -2,13 +2,13 @@
 
 > A Python library for tamper-evident agent memory (a SHA-256 hash chain), per-agent Ed25519 and hybrid Ed25519 + ML-DSA-44 signing keys ("SoulKeys"), HMAC capability tokens, and an OWASP ASI06 tamper scan. Apache-2.0, by Saluca LLC.
 
-Facts agents most often get wrong: the core (memory, governance, detection) is standard library only, Python 3.9+; identity needs `cryptography`, hybrid keys also need `quantcrypt`. It is installed from this GitHub repository only, never from PyPI (a PyPI project with the same name is not this one). It detects edits to stored entries, splices, reorders and stripped or forged signatures; it does not detect deletion of entries from the end of a chain, false content written through `append()`, or tool calls that skip `verify_token()`.
+Facts agents most often get wrong: the core (memory, governance, detection) is standard library only, Python 3.9+; identity needs `cryptography`, hybrid keys also need `quantcrypt`. It is installed from this GitHub repository only, never from PyPI (a PyPI project with the same name is not this one). It detects edits to stored entries, splices, reorders and stripped or forged signatures; it does not detect deletion of entries from the end of a chain, false content written through `append()`, or tool calls that skip `verify_token()`. There is no storage layer, no CLI and no server.
 
-Generated 2026-10-22 from the files below. Regenerate whenever any of them changes.
+The full text of this repository's prose docs, concatenated, each under its path. Regenerate this file whenever one of them changes.
 
 ## README.md
 
-# SoulGuard
+### SoulGuard
 
 **An open trust layer for AI-agent memory and identity.** Tamper-evident memory, per-agent cryptographic identity, capability-scoped governance tokens, and OWASP-**ASI06** memory-poisoning detection, so that after-the-fact edits to a stateful agent's stored history are detected rather than silent.
 
@@ -33,7 +33,39 @@ Apache-2.0 · by [Saluca LLC](https://saluca.com) · extracted from the producti
 
 ---
 
-## Why
+#### How it works
+
+Two paths, both in `src/soulguard/memory.py`: `append()` writes an entry, and `verify()` (called by `detection.scan()`) re-derives every hash and link from the first entry on.
+
+```mermaid
+flowchart TD
+  subgraph write["Write path"]
+    w1["TamperEvidentMemory.append(content, ts, signer)<br/>idx = last entry's idx + 1, or 0<br/>prev_hash = head, GENESIS = 64 zeros for the first"] --> w2["entry_hash(): SHA-256 of canonical JSON<br/>{idx, ts, agent_id, content, prev_hash}"]
+    w2 --> w3{"signer given?"}
+    w3 -- "yes" --> w4["sig = signer.sign(hash).hex()<br/>SoulKey or HybridSoulKey"]
+    w3 -- "no" --> w5["sig = None"]
+    w4 --> w6["entries.append(MemoryEntry)"]
+    w5 --> w6
+  end
+  subgraph check["Check path"]
+    c1["detection.scan(memory, verifier, signed_from_idx)<br/>calls memory.verify(): for each entry,<br/>prev starts at GENESIS"] --> c2["recompute() != hash<br/>finding content_tampered"]
+    c1 --> c3["prev_hash != previous hash<br/>finding broken_link"]
+    c1 --> c4{"verifier given?"}
+    c4 -- "yes, sig is None and idx >= signed_from_idx" --> c5["finding missing_signature"]
+    c4 -- "yes, verifier.verify() false or raises" --> c6["finding bad_signature"]
+    c4 -- "no" --> c7["signatures not checked"]
+    c2 --> r["ScanResult: intact, findings, checked,<br/>signatures_verified, unsigned_prefix"]
+    c3 --> r
+    c5 --> r
+    c6 --> r
+    c7 --> r
+  end
+  w6 -. "mem.entries" .-> c1
+```
+
+Nothing on either path records how many entries a chain should have, which is why tail deletion passes (correction 1 above). Governance tokens are a separate path, not shown: `issue_token()` and `verify_token()` in `governance.py` share no state with memory.
+
+#### Why
 
 AI agents became *stateful*: they carry persistent **memory**, a durable **identity**, and tool access. That state is also the new attack surface. In 2026 OWASP named **Memory Poisoning (ASI06)** a top-10 agentic risk: once memory is the substrate, an injected lie persists across sessions and the agent later acts on it with full authority, the machine equivalent of confabulation. Input-only guardrails don't see the corrupted state that already lives inside the agent.
 
@@ -46,7 +78,7 @@ SoulGuard makes agent memory and identity **first-class, verifiable, owned primi
 | `governance` | **Capability-scoped, short-lived, least-privilege tokens** (HMAC-SHA256, default TTL 300 s). Your code checks a token before each action; an action outside the token's scopes or after expiry is refused at that check. |
 | `detection` | **ASI06 scan.** Turns silent tampering into a classified alarm: `content_tampered`, `broken_link` (injection or reorder), `bad_signature`, `missing_signature`. |
 
-## Status
+#### Status
 
 Experimental, v0.1.0. What works today, all of it covered by the 25 tests in `tests/`:
 
@@ -56,11 +88,13 @@ Experimental, v0.1.0. What works today, all of it covered by the 25 tests in `te
 - `scan()`, which reports whether signatures were actually checked (`signatures_verified`);
 - a v0 ASI06 benchmark harness with a fixed seed.
 
-What it does not do: detect a false memory written through the normal `append()` path (SoulGuard is the integrity layer, not a content filter), detect deletion of entries from the end of a chain, or enforce tokens on your behalf. The ASI06 harness injects only two attack types (an in-place content edit and an out-of-band entry), both of which the hash chain catches by construction, so its 1.000 detection rate is a regression check, not evidence against an adaptive adversary.
+What it does not do: detect a false memory written through the normal `append()` path (SoulGuard is the integrity layer, not a content filter), detect deletion of entries from the end of a chain, or enforce tokens on your behalf. The ASI06 harness injects only two attack types (an in-place content edit and an out-of-band entry), both of which the hash chain catches by construction, so its 1.000 detection rate is a regression check, not evidence against an adaptive adversary. To re-derive it: `python benchmark/asi06_harness.py` (500 trials of length 20, `SEED = 1337` in the
+script); the output from 2026-10-22 is in [`docs/img/asi06-benchmark-2026-10-22.txt`](docs/img/asi06-benchmark-2026-10-22.txt).
+There is no archived record or DOI for it.
 
 Planned and not yet built: hardening, a formal third-party security audit, expanded reference implementations, MCP adapters, and a published adversarial benchmark (see [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md)).
 
-## Install
+#### Install
 
 Tested 2026-10-22 on Python 3.12.10 (CI runs 3.10, 3.12 and 3.13; `pyproject.toml` declares 3.9+).
 
@@ -88,7 +122,7 @@ published on PyPI, and a PyPI package named `soulguard` is not ours: never
 install it from PyPI. Pin the git install to a tag or commit you
 have reviewed (the commit above is an example; replace it with the ref you want).
 
-## Quickstart
+#### Quickstart
 
 ```bash
 python examples/quickstart.py
@@ -113,9 +147,9 @@ Output from a clean clone on 2026-10-22:
 Done. Poisoning detected, authority scoped. That's the trust layer.
 ```
 
-## Usage
+#### Usage
 
-### 30-second example
+##### 30-second example
 
 ```python
 from soulguard import TamperEvidentMemory, scan
@@ -152,7 +186,7 @@ scan(mem, verifier=key.public()).intact     # True
 
 All three snippets were run on 2026-10-22 and print what the comments say.
 
-### Capability tokens
+##### Capability tokens
 
 ```python
 from soulguard import issue_token, verify_token
@@ -162,25 +196,38 @@ verify_token(secret, tok, "memory:read")   # True
 verify_token(secret, tok, "tool:exec")     # False
 ```
 
-### Chains that began before signing
+##### Chains that began before signing
 
 `verify(verifier=..., signed_from_idx=N)` and `scan(..., signed_from_idx=N)` excuse a missing
 signature below entry `N` (it is counted in `ScanResult.unsigned_prefix`), never an invalid one.
 Supply `N` from your own configuration, never from a field stored in the chain.
 
-## Architecture
+#### Architecture
 
 ```mermaid
 flowchart LR
-  A[agent] -->|append content, signer| M[memory.TamperEvidentMemory]
-  M -->|entries| D[detection.scan]
-  K[identity.SoulKey / HybridSoulKey] -->|sign entry hash| M
-  K -->|public key, pinned| D
-  D --> R[ScanResult: intact, findings, signatures_verified]
-  G[governance.issue_token] --> T[capability token]
-  T --> V[governance.verify_token, called by your code before each action]
+  init["import soulguard<br/>package init re-exports the core;<br/>identity only if its dependencies import"]
+  subgraph stdlib["Standard library only"]
+    memory["memory.py<br/>TamperEvidentMemory, MemoryEntry, Finding"]
+    detection["detection.py<br/>scan, ScanResult"]
+    governance["governance.py<br/>issue_token, verify_token"]
+  end
+  subgraph crypto["Needs cryptography"]
+    soulkey["identity.py<br/>SoulKey, SoulKeyVerifier (Ed25519)"]
+  end
+  subgraph pqc["Needs quantcrypt too"]
+    hybrid["identity.py<br/>HybridSoulKey, HybridSoulKeyVerifier<br/>Ed25519 + ML-DSA-44, pqc extra"]
+  end
+  init --> memory
+  init --> detection
+  init --> governance
+  init -. "try, except ImportError" .-> soulkey
+  init -. "try, except ImportError" .-> hybrid
+  detection -- "imports" --> memory
+  soulkey -. "passed in as signer or verifier,<br/>never imported by memory.py" .-> memory
+  hybrid -. "same sign/verify interface" .-> memory
+  yourcode["your code"] -- "verify_token() before each action" --> governance
 ```
-
 | File | What it holds |
 |---|---|
 | `src/soulguard/memory.py` | `TamperEvidentMemory`, `MemoryEntry`, `Finding`; SHA-256 over canonical JSON, each entry linked to the previous hash |
@@ -191,15 +238,27 @@ flowchart LR
 | `docs/THREAT_MODEL.md` | assets, adversary, attack classes, residual risk |
 
 The core imports only the standard library; `identity` is imported only if `cryptography` (and, for
-the hybrid keys, `quantcrypt`) is installed.
+the hybrid keys, `quantcrypt`) is installed. `memory.py` never imports `identity.py`: any object with
+`sign(bytes) -> bytes` or `verify(bytes, bytes) -> bool` works as a signer or verifier.
 
-## Design principles
+##### In this repo and not in this repo
+
+| Layer | In this repo | Licence | Where it lives |
+|---|---|---|---|
+| Hash-chained memory, SoulKeys, capability tokens, ASI06 scan | yes | Apache-2.0 | `src/soulguard/` |
+| ASI06 benchmark v0 | yes | Apache-2.0 | `benchmark/asi06_harness.py` |
+| Persistence: saving a chain to a database or file | no; `to_json()` and `from_json()` only | - | your code |
+| An independent verifier for Saluca's other chain format (SHA-512, signed blocks) | no | Apache-2.0 | [saluca-labs/chain-verify](https://github.com/saluca-labs/chain-verify) |
+| The production stack SoulGuard was extracted from | no | not open source | not public |
+| The specifications | no | IETF Internet-Drafts | [draft-ruvalcaba series](https://datatracker.ietf.org/doc/search?name=draft-ruvalcaba&rfcs=on&activedrafts=on) |
+
+#### Design principles
 
 - **Local-first / sovereign:** runs where *you* control it; no platform owns your agent's memory.
 - **Verifiable, not trusted:** integrity is checkable, not asserted.
 - **Dependency-light core:** the memory/governance/detection core is standard-library only.
 
-## Screenshots
+#### Screenshots
 
 Captured 2026-10-22 from a clean clone of `main`; the command and the verbatim text are in the
 `.txt` file beside each image.
@@ -208,11 +267,11 @@ Captured 2026-10-22 from a clean clone of `main`; the command and the verbatim t
 
 ![Terminal output of python benchmark/asi06_harness.py: 500 trials, detection rate 1.000, false positives 0.000](docs/img/asi06-benchmark-2026-10-22.png)
 
-## Citation
+#### Citation
 
 No archived record yet.
 
-## License
+#### License
 
 **Apache License, Version 2.0** (SPDX: `Apache-2.0`, see [`LICENSE`](LICENSE)). Read it, modify it, self-host it, run it internally, build a product on
 it. There is no field-of-use restriction.
@@ -229,7 +288,7 @@ history and patent scope.
 Saluca's broader patent portfolio (filed provisional applications) is separate and is not licensed by this
 repository under either licence.
 
-## Links
+#### Links
 
 - [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md): what SoulGuard defends against, and what it does not
 - [`CONTRIBUTING.md`](CONTRIBUTING.md): dev setup, scope, and how to report a vulnerability
@@ -242,9 +301,107 @@ repository under either licence.
 
 _Last updated: 2026-10-22_
 
+## AGENTS.md
+
+### AGENTS.md
+
+Instructions for AI coding agents working in this repository.
+
+#### What this is
+
+A small Python library: a SHA-256 hash-chained memory for one agent's history, Ed25519 and hybrid Ed25519 + ML-DSA-44 signing keys, HMAC capability tokens, and a `scan()` that classifies tampering. It is an integrity layer; it does not filter content, persist data, or enforce tokens for you.
+
+#### Read in this order
+
+1. [README.md](README.md): the correction note at the top, then "How it works" and "Architecture".
+2. [src/soulguard/memory.py](src/soulguard/memory.py): `entry_hash()`, `TamperEvidentMemory.append()` and `verify()`; the adversary model is in its module docstring.
+3. [src/soulguard/detection.py](src/soulguard/detection.py): `scan()` and `ScanResult`, including `signatures_verified` and `unsigned_prefix`.
+4. [src/soulguard/identity.py](src/soulguard/identity.py) and [governance.py](src/soulguard/governance.py): keys and tokens.
+5. [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md): what is and is not defended.
+
+#### What you can and cannot see
+
+- You can see the whole library, its tests, the benchmark harness and the quickstart.
+- You cannot see the production stack SoulGuard was extracted from; it is not public. A code comment in `memory.py` names a client module from it (`cp_client.HttpAuditSink`) that is not in this repo.
+- There is no storage layer: a chain lives in memory and round-trips through `to_json()` and `from_json()`.
+- Three source docstrings (`memory.py`, `identity.py`, `governance.py`) still carry the wording the README's 2026-10-22 correction withdrew. Trust the README and the code paths, not those docstrings.
+
+#### Using it as an agent
+
+```bash
+pip install "soulguard @ git+https://github.com/saluca-labs/soulguard@283d0192b29374859221e3d469182ff29c1ac16d"
+```
+
+```python
+from soulguard import TamperEvidentMemory, scan
+mem = TamperEvidentMemory(agent_id="agent-1")
+mem.append("first fact")
+head = mem.head                      # keep this outside the writer's reach to catch truncation
+result = scan(mem)                   # pass verifier=key.public() to check signatures
+print(result.intact, result.signatures_verified, result.summary())
+```
+
+Never install `soulguard` from PyPI: that project is not this one. Add `[pqc]` after `soulguard` for hybrid keys, which also need `cryptography` and `quantcrypt`.
+
+#### The only numbers to trust
+
+| Number | Value | Source |
+|---|---|---|
+| Version | 0.1.0 | `__version__` in `src/soulguard/__init__.py`, `version` in `pyproject.toml` |
+| Tests | 25 (7 + 2 + 11 + 5) | `def test_` in `tests/test_hybrid_identity.py`, `test_optional_imports.py`, `test_signature_absence.py`, `test_soulguard.py` |
+| Entry hash | SHA-256, 64 hex characters; genesis is 64 zeros | `entry_hash()` and `GENESIS` in `memory.py` |
+| Token default lifetime | 300 seconds | `ttl_seconds` default in `issue_token()`, `governance.py` |
+| ASI06 benchmark v0 | 500 trials, length 20, seed 1337; detection 1.000, false positives 0.000 | `benchmark/asi06_harness.py`; output in `docs/img/asi06-benchmark-2026-10-22.txt`. A regression check of two attacks the chain catches by construction, not evidence against an adaptive adversary |
+| Python | 3.9+ declared; CI on 3.10, 3.12, 3.13 | `pyproject.toml`, `.github/workflows/ci.yml` |
+
+#### Setup
+
+```bash
+python -m venv .venv
+. .venv/bin/activate            # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+```
+
+#### Test
+
+```bash
+python -m pytest -v                                         # full suite, needs the dev extras
+PYTHONPATH=src python tests/test_soulguard.py               # core only, no dependencies
+python examples/quickstart.py
+python .github/scripts/check_install_docs.py soulguard     # no PyPI install instructions
+```
+
+Passing looks like: pytest reports every test passed (25 on 2026-10-22), `tests/test_soulguard.py`
+ends with `5 tests passed.`, and `check_install_docs.py` prints nothing and exits 0. CI
+(`.github/workflows/ci.yml`) runs the same three jobs.
+
+#### Conventions
+
+- `memory.py`, `governance.py` and `detection.py` stay standard library only. Optional dependencies go
+  in `[project.optional-dependencies]` and are imported lazily, catching `ImportError` only.
+- Signature checks fail closed: a missing signature on a verified chain is a finding, never a skip.
+  Do not add a code path that reads `signed_from_idx` from stored data.
+- Install instructions in any doc are git installs from `github.com/saluca-labs/soulguard`, never a
+  bare `pip install` of this package (CI enforces this).
+- The README diagrams are Mermaid source traced from `memory.py`, `detection.py` and `__init__.py`.
+  Change them when those paths change.
+- No em-dashes in docs. Claims in the README must match the code on `main`.
+- If you change README.md or docs/, regenerate `llms-full.txt` in the same change.
+
+#### Do not
+
+- Publish to PyPI or add PyPI install instructions.
+- Weaken `verify()` or `scan()` to pass a test.
+- Commit secrets, hostnames, internal paths or personal emails.
+
+#### Done means
+
+`python -m pytest` passes, the core-only run passes without optional packages installed, the
+quickstart runs, and `check_install_docs.py soulguard` exits 0.
+
 ## docs/THREAT_MODEL.md
 
-# SoulGuard Threat Model: Agent Memory Poisoning (OWASP ASI06)
+### SoulGuard Threat Model: Agent Memory Poisoning (OWASP ASI06)
 
 *v0, 2026-06-24. Scope: the integrity and attributability of a stateful AI agent's persistent memory and identity. Maps to OWASP Top 10 for Agentic Applications **ASI06, Memory & Context Poisoning**.*
 
@@ -256,15 +413,15 @@ _Last updated: 2026-10-22_
 > or not, because the chain does not record its own length. Detecting it needs the head hash held
 > outside the writer's reach. Both are added below; nothing else in the analysis changes.
 
-## Assets to protect
+#### Assets to protect
 1. **Agent memory:** the persistent record an agent reads back and acts on.
 2. **Agent identity:** which agent authored a memory or action (non-person-entity identity).
 3. **Agent authority:** the set of tool actions an agent may take.
 
-## Adversary
+#### Adversary
 A party who can write to, or tamper with, an agent's memory store or message stream, via indirect prompt injection (the "lethal trifecta": private data + untrusted content + outbound action), a compromised tool/integration, a malicious co-agent, or storage-layer access. Goal: make the agent later act on a falsified "trusted" history, or act with an identity/authority it shouldn't have, **without detection**.
 
-## Attack classes (and SoulGuard's response)
+#### Attack classes (and SoulGuard's response)
 | # | Attack | Example | SoulGuard control | Detected as |
 |---|---|---|---|---|
 | A1 | **Content tampering** | Edit a stored memory after the fact ("no IOC was seen") | Hash-chained entries; stored content must match its hash | `content_tampered` |
@@ -274,32 +431,32 @@ A party who can write to, or tamper with, an agent's memory store or message str
 | A4 | **Authority over-reach** | A poisoned agent invokes tools beyond its role | Capability-scoped, short-TTL, signed tokens (least privilege) | token verification fails |
 | A5 | **Stale / replayed authority** | Reuse an old capability token | TTL expiry on tokens | token verification fails |
 
-## What SoulGuard does and does not do
+#### What SoulGuard does and does not do
 **Does:** make A1–A3b *detectable* (silent corruption → raised alarm) and A4–A5 *preventable* (least-privilege, expiring authority); keep the substrate local-first and owned; provide a reproducible ASI06 detection benchmark. Note that A3b is why signature *absence* is a failure rather than a skipped check: an adversary able to rebuild the chain is also able to delete the signatures that would expose the rebuild, so a verifier that only checks signatures it happens to find defends against forgery alone, which is the attack such an adversary has no reason to attempt. Chains predating signing are handled by an explicit, caller-supplied boundary, never by inferring intent from a missing field.
 **Does not (v0, residual risk):** prevent the *initial* injection at the input boundary (that's the prompt-firewall layer's job, SoulGuard is the integrity layer beneath it); distinguish *malicious* edits from *authorized* memory evolution at the semantic level (v0 treats the chain as append-only; authorized mutation = a new, signed entry, not an in-place edit); defend a fully-compromised host that holds the signing keys (key custody/HSM is out of scope for v0); detect *tail truncation*, the removal of the newest entries, unless the caller keeps the head hash (`mem.head`) out of band and compares it (added 2026-10-22).
 
-## Trust & key custody assumptions
+#### Trust & key custody assumptions
 - The signing secret (governance) and SoulKey private keys are held in the operator's control boundary (local-first). Compromise of the key store is out of scope; SoulGuard is designed so the *memory record itself* is verifiable independent of any single platform.
 - Verification is offline-checkable: anyone with the public key + the chain can prove integrity without trusting a service.
 
-## Benchmark protocol (ASI06 v0)
+#### Benchmark protocol (ASI06 v0)
 `benchmark/asi06_harness.py` injects A1/A2 attacks into otherwise-clean histories (fixed seed for reproducibility) and reports **detection rate**, **false-positive rate**, and the number of poisoned histories **missed** (corrected 2026-10-22; see the note at the top). The funded roadmap extends this to **adaptive adversaries** and authorized-evolution-vs-tampering precision/recall, the open, measurable benchmark the field currently lacks.
 
-## Roadmap (funded deliverables)
+#### Roadmap (funded deliverables)
 Formal third-party security audit · adaptive-adversary benchmark · MCP-compatible reference adapters · authorized-evolution semantics (distinguishing benign drift from tampering) · key-custody integration (HSM/TPM).
 
 ## CONTRIBUTING.md
 
-# Contributing to SoulGuard
+### Contributing to SoulGuard
 
 SoulGuard is open public-goods AI-security infrastructure. Contributions welcome.
 
-## Principles
+#### Principles
 - **Sovereignty first.** Anything that makes the user *less* the owner of their agent's memory/identity is out of scope.
 - **Verifiable, not trusted.** New controls must be externally checkable (an auditor with the public material can verify them offline).
 - **Dependency-light core.** The `memory`, `governance`, and `detection` modules stay standard-library only. Optional crypto/integration deps go in `optional-dependencies`.
 
-## Dev setup
+#### Dev setup
 ```bash
 pip install -e ".[dev]"
 python -m pytest            # or: python tests/test_soulguard.py
@@ -307,14 +464,14 @@ python examples/quickstart.py
 python benchmark/asi06_harness.py
 ```
 
-## What's most valuable right now
+#### What's most valuable right now
 - Adaptive-adversary attacks for the ASI06 benchmark.
 - Authorized-evolution-vs-tampering semantics (distinguishing benign memory drift from poisoning).
 - MCP-compatible adapters.
 - Independent review of the crypto and the threat model (`docs/THREAT_MODEL.md`).
 
-## License
+#### License
 By contributing you agree your contributions are licensed under **Apache-2.0** (see `LICENSE`). Please don't submit code encumbered by patents you can't license under Apache-2.0's grant.
 
-## Security
+#### Security
 Found a vulnerability? Email **info@saluca.com** rather than opening a public issue.
