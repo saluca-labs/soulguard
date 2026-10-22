@@ -1,14 +1,22 @@
-# SoulGuard Threat Model — Agent Memory Poisoning (OWASP ASI06)
+# SoulGuard Threat Model: Agent Memory Poisoning (OWASP ASI06)
 
-*v0, 2026-06-24. Scope: the integrity and attributability of a stateful AI agent's persistent memory and identity. Maps to OWASP Top 10 for Agentic Applications **ASI06 — Memory & Context Poisoning**.*
+*v0, 2026-06-24. Scope: the integrity and attributability of a stateful AI agent's persistent memory and identity. Maps to OWASP Top 10 for Agentic Applications **ASI06, Memory & Context Poisoning**.*
+
+> **Correction, 2026-10-22.** Two statements in this document said more than the code does.
+> (1) The benchmark paragraph below said the harness reports a **first-detection index**; it reports
+> detection rate, false-positive rate and the number missed, not a first-detection index (that value
+> is available per scan as `ScanResult.first_compromised_index`). (2) The residual-risk list omitted
+> **tail truncation**: deleting entries from the end of a chain passes `verify()` and `scan()`, signed
+> or not, because the chain does not record its own length. Detecting it needs the head hash held
+> outside the writer's reach. Both are added below; nothing else in the analysis changes.
 
 ## Assets to protect
-1. **Agent memory** — the persistent record an agent reads back and acts on.
-2. **Agent identity** — which agent authored a memory or action (non-person-entity identity).
-3. **Agent authority** — the set of tool actions an agent may take.
+1. **Agent memory:** the persistent record an agent reads back and acts on.
+2. **Agent identity:** which agent authored a memory or action (non-person-entity identity).
+3. **Agent authority:** the set of tool actions an agent may take.
 
 ## Adversary
-A party who can write to, or tamper with, an agent's memory store or message stream — via indirect prompt injection (the "lethal trifecta": private data + untrusted content + outbound action), a compromised tool/integration, a malicious co-agent, or storage-layer access. Goal: make the agent later act on a falsified "trusted" history, or act with an identity/authority it shouldn't have, **without detection**.
+A party who can write to, or tamper with, an agent's memory store or message stream, via indirect prompt injection (the "lethal trifecta": private data + untrusted content + outbound action), a compromised tool/integration, a malicious co-agent, or storage-layer access. Goal: make the agent later act on a falsified "trusted" history, or act with an identity/authority it shouldn't have, **without detection**.
 
 ## Attack classes (and SoulGuard's response)
 | # | Attack | Example | SoulGuard control | Detected as |
@@ -22,14 +30,14 @@ A party who can write to, or tamper with, an agent's memory store or message str
 
 ## What SoulGuard does and does not do
 **Does:** make A1–A3b *detectable* (silent corruption → raised alarm) and A4–A5 *preventable* (least-privilege, expiring authority); keep the substrate local-first and owned; provide a reproducible ASI06 detection benchmark. Note that A3b is why signature *absence* is a failure rather than a skipped check: an adversary able to rebuild the chain is also able to delete the signatures that would expose the rebuild, so a verifier that only checks signatures it happens to find defends against forgery alone, which is the attack such an adversary has no reason to attempt. Chains predating signing are handled by an explicit, caller-supplied boundary, never by inferring intent from a missing field.
-**Does not (v0, residual risk):** prevent the *initial* injection at the input boundary (that's the prompt-firewall layer's job — SoulGuard is the integrity layer beneath it); distinguish *malicious* edits from *authorized* memory evolution at the semantic level (v0 treats the chain as append-only; authorized mutation = a new, signed entry, not an in-place edit); defend a fully-compromised host that holds the signing keys (key custody/HSM is out of scope for v0).
+**Does not (v0, residual risk):** prevent the *initial* injection at the input boundary (that's the prompt-firewall layer's job, SoulGuard is the integrity layer beneath it); distinguish *malicious* edits from *authorized* memory evolution at the semantic level (v0 treats the chain as append-only; authorized mutation = a new, signed entry, not an in-place edit); defend a fully-compromised host that holds the signing keys (key custody/HSM is out of scope for v0); detect *tail truncation*, the removal of the newest entries, unless the caller keeps the head hash (`mem.head`) out of band and compares it (added 2026-10-22).
 
 ## Trust & key custody assumptions
 - The signing secret (governance) and SoulKey private keys are held in the operator's control boundary (local-first). Compromise of the key store is out of scope; SoulGuard is designed so the *memory record itself* is verifiable independent of any single platform.
 - Verification is offline-checkable: anyone with the public key + the chain can prove integrity without trusting a service.
 
 ## Benchmark protocol (ASI06 v0)
-`benchmark/asi06_harness.py` injects A1/A2 attacks into otherwise-clean histories (fixed seed for reproducibility) and reports **detection rate**, **false-positive rate**, and **first-detection index**. The funded roadmap extends this to **adaptive adversaries** and authorized-evolution-vs-tampering precision/recall — the open, measurable benchmark the field currently lacks.
+`benchmark/asi06_harness.py` injects A1/A2 attacks into otherwise-clean histories (fixed seed for reproducibility) and reports **detection rate**, **false-positive rate**, and the number of poisoned histories **missed** (corrected 2026-10-22; see the note at the top). The funded roadmap extends this to **adaptive adversaries** and authorized-evolution-vs-tampering precision/recall, the open, measurable benchmark the field currently lacks.
 
 ## Roadmap (funded deliverables)
 Formal third-party security audit · adaptive-adversary benchmark · MCP-compatible reference adapters · authorized-evolution semantics (distinguishing benign drift from tampering) · key-custody integration (HSM/TPM).

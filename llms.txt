@@ -1,0 +1,26 @@
+# SoulGuard
+
+> A Python library for tamper-evident agent memory (a SHA-256 hash chain), per-agent Ed25519 and hybrid Ed25519 + ML-DSA-44 signing keys ("SoulKeys"), HMAC capability tokens, and an OWASP ASI06 tamper scan. Apache-2.0, by Saluca LLC.
+
+Facts agents most often get wrong: the core (memory, governance, detection) is standard library only, Python 3.9+; identity needs `cryptography`, hybrid keys also need `quantcrypt`. It is installed from this GitHub repository only, never from PyPI (a PyPI project with the same name is not this one). It detects edits to stored entries, splices, reorders and stripped or forged signatures; it does not detect deletion of entries from the end of a chain, false content written through `append()`, or tool calls that skip `verify_token()`.
+
+## Docs
+
+- [README](https://github.com/saluca-labs/soulguard/blob/main/README.md): install, quickstart, usage, architecture, the 2026-10-22 correction note
+- [Threat model](https://github.com/saluca-labs/soulguard/blob/main/docs/THREAT_MODEL.md): assets, adversary, attack classes A1 to A5, residual risk
+- [Contributing](https://github.com/saluca-labs/soulguard/blob/main/CONTRIBUTING.md): dev setup, scope, vulnerability reporting
+
+## Code
+
+- [src/soulguard/memory.py](https://github.com/saluca-labs/soulguard/blob/main/src/soulguard/memory.py): TamperEvidentMemory, the hash chain and verify()
+- [src/soulguard/identity.py](https://github.com/saluca-labs/soulguard/blob/main/src/soulguard/identity.py): SoulKey, HybridSoulKey and their verifiers
+- [src/soulguard/governance.py](https://github.com/saluca-labs/soulguard/blob/main/src/soulguard/governance.py): issue_token, verify_token
+- [src/soulguard/detection.py](https://github.com/saluca-labs/soulguard/blob/main/src/soulguard/detection.py): scan() and ScanResult
+- [examples/quickstart.py](https://github.com/saluca-labs/soulguard/blob/main/examples/quickstart.py): the shortest end-to-end demo
+- [tests/](https://github.com/saluca-labs/soulguard/blob/main/tests): the pytest suite (25 tests on 2026-10-22)
+
+## Optional
+
+- [benchmark/asi06_harness.py](https://github.com/saluca-labs/soulguard/blob/main/benchmark/asi06_harness.py): ASI06 benchmark v0, fixed seed
+- [NOTICE](https://github.com/saluca-labs/soulguard/blob/main/NOTICE): licence history and patent scope
+- [llms-full.txt](https://github.com/saluca-labs/soulguard/blob/main/llms-full.txt): README and docs concatenated
