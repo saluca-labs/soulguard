@@ -1,0 +1,173 @@
+{
+ "version": 2,
+ "written": "2026-10-22",
+ "rule": "debt may only shrink; see repo-merge-gate.md GATE-3",
+ "note": "ids are hashes of each finding; run `python -m gate run` to see them",
+ "entries": [
+  {
+   "check": "style",
+   "id": "a508a04bf3a8356c134c",
+   "path": "README.md"
+  },
+  {
+   "check": "style",
+   "id": "a54af528caaca1e90640",
+   "path": "README.md"
+  },
+  {
+   "check": "style",
+   "id": "293637b83d073d1bad9c",
+   "path": "README.md"
+  },
+  {
+   "check": "style",
+   "id": "b2e4a659963cd60cf9c4",
+   "path": "README.md"
+  },
+  {
+   "check": "style",
+   "id": "16222c899cab094c9a1c",
+   "path": "README.md"
+  },
+  {
+   "check": "style",
+   "id": "520c946a7cd335c7c618",
+   "path": "README.md"
+  },
+  {
+   "check": "style",
+   "id": "1d96f9a8ec0b13d9e19e",
+   "path": "README.md"
+  },
+  {
+   "check": "style",
+   "id": "480b84659deaf4fb914e",
+   "path": "README.md"
+  },
+  {
+   "check": "style",
+   "id": "9e664a1996e238b75eca",
+   "path": "README.md"
+  },
+  {
+   "check": "style",
+   "id": "10d3fbc8335f5d1e7376",
+   "path": "README.md"
+  },
+  {
+   "check": "style",
+   "id": "ef1c228c5e87708e6db7",
+   "path": "README.md"
+  },
+  {
+   "check": "style",
+   "id": "c8c1b7831991b65b4077",
+   "path": "README.md"
+  },
+  {
+   "check": "style",
+   "id": "0479892c7d18efde2099",
+   "path": "README.md"
+  },
+  {
+   "check": "style",
+   "id": "61caa1a8f6ac36950fdb",
+   "path": "docs/THREAT_MODEL.md"
+  },
+  {
+   "check": "style",
+   "id": "113b1e1de920a9592802",
+   "path": "docs/THREAT_MODEL.md"
+  },
+  {
+   "check": "style",
+   "id": "3e520fc62cb7680c8e22",
+   "path": "docs/THREAT_MODEL.md"
+  },
+  {
+   "check": "style",
+   "id": "2a3b3ad7c7165d017bfa",
+   "path": "docs/THREAT_MODEL.md"
+  },
+  {
+   "check": "style",
+   "id": "c89bb9145f7d879abee8",
+   "path": "docs/THREAT_MODEL.md"
+  },
+  {
+   "check": "style",
+   "id": "98e0d81000b0843af764",
+   "path": "docs/THREAT_MODEL.md"
+  },
+  {
+   "check": "style",
+   "id": "50611b13b764afc99fbd",
+   "path": "docs/THREAT_MODEL.md"
+  },
+  {
+   "check": "style",
+   "id": "77e97991b2266ce48847",
+   "path": "docs/THREAT_MODEL.md"
+  },
+  {
+   "check": "test-markers",
+   "id": "2d8dc25919e608bece6e",
+   "path": "tests/test_hybrid_identity.py"
+  },
+  {
+   "check": "claims",
+   "id": "a59c86aa776f4a18c505",
+   "path": ""
+  },
+  {
+   "check": "licence",
+   "id": "395a191ff0703be5d7cd",
+   "path": "README.md"
+  },
+  {
+   "check": "licence",
+   "id": "0e183ff0ae554e01324c",
+   "path": "NOTICE"
+  },
+  {
+   "check": "licence",
+   "id": "e7f122375c81488c193c",
+   "path": "LICENSE"
+  },
+  {
+   "check": "docs",
+   "id": "aafc68c653a507b6941e",
+   "path": "README.md"
+  },
+  {
+   "check": "docs",
+   "id": "bbb1f99b140392f1906f",
+   "path": "README.md"
+  },
+  {
+   "check": "docs",
+   "id": "6a102ada6b632910f355",
+   "path": "README.md"
+  },
+  {
+   "check": "docs",
+   "id": "7fcb8037f0cbaee52798",
+   "path": "README.md"
+  },
+  {
+   "check": "docs",
+   "id": "d1d18256ebd90ac25aa0",
+   "path": "README.md"
+  },
+  {
+   "check": "docs",
+   "id": "b79ed584daf8a632b453",
+   "path": ""
+  },
+  {
+   "check": "branch-protection",
+   "id": "f0fac6b41c6325ac9702",
+   "path": ""
+  }
+ ]
+}
