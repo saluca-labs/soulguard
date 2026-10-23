@@ -1,0 +1,14 @@
+Command (run from the repository root of a clean clone):
+  python benchmark/asi06_harness.py
+
+Ref: origin/main d5d2794
+Python: 3.12.10, venv with pip install -e ".[dev]"
+Exit code: 0
+Captured: 2026-10-22. Rendered from the text below with rich (SVG export) and headless Chrome; the image body is this output, unchanged.
+
+Output, verbatim:
+=== SoulGuard ASI06 benchmark v0 ===
+trials=500  length=20  seed=1337
+detection rate : 1.000  (500/500 poisoned histories flagged)
+false positives: 0.000  (0/500 clean histories flagged)
+missed         : 0
