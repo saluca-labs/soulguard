@@ -1,3 +1,5 @@
+![soulguard](docs/img/banner-2026-10-23.jpg)
+
 # SoulGuard
 
 **An open trust layer for AI-agent memory and identity.** Tamper-evident memory, per-agent cryptographic identity, capability-scoped governance tokens, and OWASP-**ASI06** memory-poisoning detection, so that after-the-fact edits to a stateful agent's stored history are detected rather than silent.
